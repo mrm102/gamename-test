@@ -1,0 +1,203 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<meta charset= "UTF-8">
+<title>Endless Odyssey</title>
+<style>
+@font-face {
+    font-family: 'Komyca';
+    src: url('file:///C:/Users/mizhq/Downloads/Action Comics Black.ttf') format('truetype');
+  }
+@font-face {
+    font-family: 'Pixel';
+    src: url('file:///C:/Users/michael.mizhquiri/OneDrive/finalproject/superstar_2/superstar_memesbruh03.ttf') format('truetype');
+}
+  body {
+    background-color: black;
+  }
+ 
+  #buttonContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+ 
+  #buttonContainer form {
+    margin: 0 10px; /* Adjust spacing between buttons */
+  }
+
+  /* Style for buttons */
+  input[type="submit"] {
+    font-size: 24px; /* Increase button text size */
+    font-family: 'Pixel', sans-serif;
+    background-color: transparent; /* Make button background transparent */
+    border: none; /* Remove button border */
+    cursor: pointer; /* Add pointer cursor on hover */
+    color: white; /* Set button text color */
+    outline: none; /* Remove outline on focus */
+    transition: color 0.3s; /* Add transition effect for color change */
+  }
+
+  input[type="submit"]:hover {
+    color: yellow; /* Change text color on hover */
+  }
+
+  #startButton, #restartButton {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Komyca', sans-serif;
+    font-size: 30px; /* Increase button text size */
+    background-color: transparent; /* Make button background transparent */
+    border: none; /* Remove button border */
+    cursor: pointer; /* Add pointer cursor on hover */
+    color: #3366cc; /* Set button text color */
+    outline: none; /* Remove outline on focus */
+    transition: color 0.3s; /* Add transition effect for color change */
+    text-shadow: 2px 0 #0000b3, -2px 0 #0000b3, 0 2px #0000b3, 0 -2px #0000b3,
+               1px 1px #0000b3, -1px -1px #0000b3, 1px -1px #0000b3, -1px 1px #0000b3; 
+  }
+
+  #startButton:hover, #restartButton:hover {
+    color: #0099cc; /* Change text color on hover */
+  }
+</style>
+</head>
+
+<body>
+<div style="position: absolute; top: 60px; left: 350px; right: 350px; bottom: 250px; margin: auto; background-image:url('ez2.gif');">
+    <canvas id="gameCanvas" width="1170" height="780" style="display: none;"></canvas>
+    <button id="startButton">START GAME</button>
+    <button id="restartButton" style="display: none;" onclick="window.location.reload();">RESTART</button>
+</div>
+<div style='display:none;'>
+    <img id='apple' src='spike.png'>
+    <img id='monster1' src='sonic1.png'>
+    <img id='monster3' src='sonic2.png'>
+    <img id='monster2' src='sonic3.png'>
+    <img id='monsterover' src='sonic4.png'>
+</div>
+
+
+<audio id="bgMusic" autoplay loop>
+  <source src="greenhill.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+<audio id="jumpSound" volume="0.5">
+  <source src="jump.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+<audio id="hitSound" volume="0.5">
+  <source src="sonicded.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+
+<script>
+    var ctx = gameCanvas.getContext("2d");
+    var x = 1470, y = 450, x1 = 1400, y1 = 457, monsterY = 410, changeY = 0, time = 0, bestTime = 0;
+    var originalAppleX = x;
+    var originalAppleY = y;
+    var appleWidth = 80, appleHeight = 100;
+    var monsterWidth = 130, monsterHeight = 130; // Adjusted height for monster
+    var monsterHitboxWidth = 80, monsterHitboxHeight = 80; // Adjusted hitbox size for monster
+    var jumping = false;
+    var jumpHeight = 200;
+    var jumpSpeed = 8;
+    var jumpCooldown = false; // Variable to track jump cooldown
+    var gameTimer;
+
+    function mainLoop() {
+        ctx.clearRect(0,0,1470,780);
+        ctx.font = "30px Komyca";
+	ctx.fillStyle = "#003300";
+        ctx.fillText("SCORE: " + Math.floor(time), 800, 80);
+        ctx.drawImage(apple, x, originalAppleY, appleWidth, appleHeight); // Spike (apple) position corrected
+        x -= 20;
+        if (x < -appleWidth) {
+            x = 1470; // Reset the position of apple when it goes off-screen
+        }
+       
+        if (x1 > 1470) {
+            x1 = -10;
+            y1 = Math.random() * 800;
+        }
+       
+        if (x1 < 10) {
+            x1 = 1400;
+            y1 = 457;
+        }
+	       	
+
+        var monsterImage = jumping ? 'monster2' : (time % 2 < 1 ? 'monster1' : 'monster3');
+        ctx.drawImage(document.getElementById(monsterImage), 120, monsterY, monsterWidth, monsterHeight); // Adjusted monster position
+
+        if (jumping) {
+            monsterY -= jumpSpeed;
+            if (monsterY <= 410 - jumpHeight) {
+                jumping = false;
+                jumpCooldown = true; // Start jump cooldown
+                setTimeout(function() {
+                    jumpCooldown = false; // Reset jump cooldown after 700 milliseconds
+                }, 700);
+                document.getElementById("jumpSound").play();
+            }
+        } else {
+            if (monsterY < 410) { // Check if monster is above ground level
+                monsterY += jumpSpeed; // Make monster fall
+                if (monsterY > 410) { // Ensure monster reaches ground level
+                    monsterY = 410;
+                }
+            }
+        }
+        checkForHits();
+        time += .05;
+    }
+
+    function startGame() {
+        document.getElementById("startButton").style.display = "none"; // Hide start button
+        document.getElementById("gameCanvas").style.display = "block"; // Show canvas
+        document.getElementById("restartButton").style.display = "none"; // Hide restart button
+        gameTimer = setInterval(mainLoop, 20);
+        document.getElementById("bgMusic").play(); // Start playing background music
+    }
+
+    function checkForHits() {
+        // Adjusted hitbox for monster
+        if(x < 120 + monsterHitboxWidth &&
+           x + appleWidth > 120 &&
+           originalAppleY < monsterY + monsterHitboxHeight &&
+           originalAppleY + appleHeight > monsterY) {
+            endGame();
+            document.getElementById("bgMusic").pause(); // Pause background music
+            document.getElementById("hitSound").play(); // Play hit sound
+        }
+    }
+
+    function endGame() {
+        clearInterval(gameTimer);
+	ctx.clearRect(0, 0, 300, 600); // Clear the canvas
+        ctx.font = "55px Komyca";  
+	ctx.fillStyle = "Red";
+        ctx.fillText("GAME OVER", 320, 240);
+	var monsterImage = "monsterover";
+	ctx.drawImage(document.getElementById(monsterImage), 160, monsterY, 130, 130);
+        document.getElementById("restartButton").style.display = "block"; // Show restart button
+        if (time > bestTime) {
+            bestTime = time;
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.keyCode == 38 && !jumping && !jumpCooldown) { // Only allow jumping if not currently jumping and not in cooldown
+            jumping = true;
+        }
+    });
+
+    document.getElementById("startButton").addEventListener("click", startGame);
+</script>
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<hr>
+<center><h2 style="color:white; font-family: Pixel, sans-serif;">Press Up Arrow Key to Jump and Avoid Obstacles</h2><center>
+</body>
+</html>
